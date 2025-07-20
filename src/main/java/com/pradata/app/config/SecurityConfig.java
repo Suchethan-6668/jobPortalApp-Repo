@@ -19,27 +19,23 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig {
     @Autowired
-    private JwtFilter jwtFilter;
-
+    JwtFilter jwtFilter;
     @Autowired
-    private MyUserDetailsService userDetailsService;
+    MyUserDetailsService userDetailsService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(request -> request
+        http.csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(requests -> requests
                         .requestMatchers("/register", "/login").permitAll()
-                        .requestMatchers("/employer/**").hasAuthority("ROLE_EMPLOYER")
-                        .requestMatchers("/employee/**").hasAnyAuthority("ROLE_EMPLOYER", "ROLE_EMPLOYEE")
+                        .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/employer/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_EMPLOYER")
+                        .requestMatchers("/employee/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_EMPLOYER", "ROLE_EMPLOYEE")
+                        .requestMatchers("/contact/**").authenticated()
                         .anyRequest().authenticated()
                 )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                );
-
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
 
@@ -56,3 +52,4 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 }
+
